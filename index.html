@@ -109,14 +109,21 @@
          ② <label for> + input 用 clip:rect(0 0 0 0) 隱藏 → 電腦通，Android 仍然冇反應
        另外⛔唔好加 accept 過濾：Android 部分檔案管理員／Google Drive 會開咗個
        空白選擇器，用家睇落就好似「撳咗冇反應」。-->
-  <!-- App 內建瀏覽器（Telegram／FB／IG WebView）好多都封鎖檔案選擇器，
-       撳落去乜反應都冇。偵測到就叫用家跳去 Chrome。（2026-07-30 實機症狀）-->
+  <!-- App 內建瀏覽器（Telegram／FB／IG WebView）多數封鎖檔案選擇器。
+       ⛔ 舊做法用 intent:// 掣叫起 Chrome —— 大佬 2026-07-30 指出呢個做法冇意義：
+          IG／FB 嗰啲 WebView 根本唔會理 intent，即係用一個一樣會失敗嘅嘢去救失敗。
+       ✅ 新做法：唔靠任何自動跳轉，直接畀成條網址人手複製，貼去真瀏覽器。
+          複製文字係乜瀏覽器都做到，冇得失敗。-->
   <div id="inapp" class="note" style="border-left-color:#f87171;background:rgba(248,113,113,.1);color:#fecaca">
     ⚠️ <b>從 Telegram／FB／IG 點進來？</b> 這些 App 的內建瀏覽器會封鎖「選擇檔案」，按下去不會有反應。<br>
-    <b>無法選檔，請按下方按鈕改用 Chrome 開啟。</b><br><br>
-    <button id="openchrome" class="btn" style="margin-top:4px">👉 改用 Chrome／Safari 開啟</button>
+    <b>請複製下面的網址，然後開啟 Chrome／Safari 貼上。</b>
+    <div id="urlbox" style="user-select:all;-webkit-user-select:all;margin:12px 0 10px;
+         padding:12px 14px;border-radius:10px;background:rgba(0,0,0,.35);
+         border:1px solid rgba(255,255,255,.18);color:#fff;font-size:15px;
+         word-break:break-all;text-align:center">https://lamleonard0707-oss.github.io/pdf2md/</div>
+    <button id="copyurl" class="btn" style="width:100%">📋 複製網址</button>
     <div style="font-size:13px;margin-top:10px;opacity:.85">
-      若按鈕無效，可自行操作：按右上角 ⋮ 或 ⋯ →「在瀏覽器中開啟」
+      複製不到？長按上面的網址全選，再選「複製」。
     </div>
   </div>
 
@@ -201,9 +208,11 @@ window.I18N_EN = {
 "🔒 全程在你的裝置上完成 —— 檔案不會上傳到任何伺服器": "🔒 Everything runs on your device — your file is never uploaded to any server",
 "從 Telegram／FB／IG 點進來？": "Opened this from Telegram / FB / IG?",
 "這些 App 的內建瀏覽器會封鎖「選擇檔案」，按下去不會有反應。": "Their in-app browsers block the file picker, so nothing happens when you tap.",
-"無法選檔，請按下方按鈕改用 Chrome 開啟。": "If you can't pick a file, use the button below to open this page in Chrome.",
-"👉 改用 Chrome／Safari 開啟": "👉 Open in Chrome / Safari",
-"若按鈕無效，可自行操作：按右上角 ⋮ 或 ⋯ →「在瀏覽器中開啟」": "If that doesn't work: tap ⋮ or ⋯ at the top right → \"Open in browser\"",
+"請複製下面的網址，然後開啟 Chrome／Safari 貼上。": "Copy the address below, then open Chrome / Safari and paste it.",
+"📋 複製網址": "📋 Copy link",
+"✅ 已複製網址": "✅ Link copied",
+"👆 已全選，請長按選「複製」": "👆 Selected — long-press and choose Copy",
+"複製不到？長按上面的網址全選，再選「複製」。": "Can't copy? Long-press the address above to select it, then choose Copy.",
 "點一下選擇 PDF，或將檔案拖進來": "Tap to choose a PDF, or drag one in",
 "可一次選擇多份 · 手機同樣適用 · 無需安裝任何軟件": "Multiple files at once · Works on mobile · Nothing to install",
 "📎 選擇 PDF（備用按鈕）": "📎 Choose PDF (backup button)",
@@ -279,6 +288,9 @@ window.I18N_EN = {
       : 'PDF → Markdown｜節省你的 AI 用量 · LL Station';
     const b = document.getElementById('langbtn');
     if (b) b.textContent = lang === 'en' ? '中文' : 'EN';
+    const cb = document.getElementById('copyurl');
+    if (cb) cb.textContent = lang === 'en'
+      ? (window.I18N_EN['📋 複製網址'] || '📋 Copy link') : '📋 複製網址';
   };
   document.addEventListener('DOMContentLoaded', () => {
     collect();
@@ -345,24 +357,25 @@ document.querySelector('label[for=file2]').addEventListener('click', () => markT
 // 實機 debug 用：顯示 User-Agent（我上次靠 UA 偵測認唔到 Telegram WebView）
 $('#ualine').textContent = navigator.userAgent;
 
-// ── App 內建瀏覽器偵測（Telegram／FB／IG／LINE WebView 多數封鎖揀檔）──
+// ── 複製網址（俾 App 內建瀏覽器用家人手貼去真瀏覽器）──
+// ⛔ 唔再用 intent:// 自動跳 Chrome：IG／FB WebView 唔會理，撳咗一樣冇反應。
 (() => {
-  const ua = navigator.userAgent;
-  const inApp = /\bFB[A-Z]{2}\/|Instagram|Line\/|MicroMessenger|TelegramBot/i.test(ua)
-             || (/Android/.test(ua) && /\bwv\b/.test(ua))                       // Android WebView
-             || (/iPhone|iPad/.test(ua) && !/Safari/.test(ua) && !/CriOS|FxiOS/.test(ua));
-  if (!inApp) return;
-  $('#inapp').style.outline = '2px solid #f87171';
-  $('#openchrome').onclick = () => {
-    const url = location.href.split('#')[0];
-    if (/Android/.test(ua)) {
-      // intent: 會叫起真 Chrome
-      location.href = 'intent://' + url.replace(/^https?:\/\//, '')
-        + '#Intent;scheme=https;package=com.android.chrome;end';
-    } else {
-      location.href = url;   // iOS：唔可以強制跳，靠上面文字指引
+  const btn = document.getElementById('copyurl');
+  const box = document.getElementById('urlbox');
+  const URL_TXT = 'https://lamleonard0707-oss.github.io/pdf2md/';
+  btn.addEventListener('click', async () => {
+    let ok = false;
+    try { await navigator.clipboard.writeText(URL_TXT); ok = true; } catch (e) {}
+    if (!ok) {                       // clipboard 被封 → 退而求其次：幫佢全選
+      try {
+        const r = document.createRange(); r.selectNodeContents(box);
+        const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+        ok = document.execCommand && document.execCommand('copy');
+      } catch (e) {}
     }
-  };
+    btn.textContent = ok ? t('✅ 已複製網址') : t('👆 已全選，請長按選「複製」');
+    setTimeout(() => { btn.textContent = t('📋 複製網址'); }, 2600);
+  });
 })();
 
 // 拖檔只負責亮起個框，唔負責收檔（收檔交返俾 input 原生行為）
