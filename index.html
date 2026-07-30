@@ -35,8 +35,9 @@
     color:#a7f3d0;font-size:13.5px;font-weight:600
   }
   #drop{
-    margin:26px 0 0;border:2px dashed var(--line);border-radius:20px;background:var(--card);
-    padding:44px 22px;text-align:center;cursor:pointer;transition:.18s;
+    display:block;margin:26px 0 0;border:2px dashed var(--line);border-radius:20px;
+    background:var(--card);padding:44px 22px;text-align:center;cursor:pointer;transition:.18s;
+    -webkit-user-select:none;user-select:none;
   }
   #drop:hover,#drop.hot{border-color:var(--pur);background:var(--card2);transform:translateY(-2px)}
   #drop .ico{font-size:52px;line-height:1}
@@ -91,11 +92,25 @@
     <div class="privacy">🔒 全程喺你部機做 —— 份檔唔會上傳去任何伺服器</div>
   </header>
 
-  <div id="drop">
+  <!-- ⚠️ 一定要用 <label for>，唔好用 JS 去 click 一個藏喺 #drop 裡面嘅 input：
+       個 click 會由 input 反彈返上 #drop 再觸發一次，變成自己撳自己，
+       手機 Chrome 會直接封鎖，撳落去乜反應都冇。（2026-07-30 真實 bug）-->
+  <label id="drop" for="file">
     <div class="ico">📄</div>
-    <div class="big">拖份 PDF 入嚟，或者撳一下揀檔</div>
+    <div class="big">撳一下揀 PDF，或者拖份入嚟</div>
     <div class="sm">可以一次過揀幾份 · 手機都用得 · 唔使安裝任何嘢</div>
-    <input id="file" type="file" accept="application/pdf,.pdf" multiple hidden>
+  </label>
+  <input id="file" type="file" accept=".pdf,application/pdf" multiple
+         style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)">
+
+  <div class="note" style="border-left-color:var(--cy);background:rgba(34,211,238,.07);color:#a5f3fc">
+    ⚠️ <b>幾時唔應該轉：</b>如果你本身就想 AI 睇<b>圖表、設計稿、掃描件</b>，就用原檔。
+    因為慳到嗰八成幾正正就係啲圖，轉完 AI 就睇唔到。
+  </div>
+
+  <div class="note" style="border-left-color:var(--pur);background:rgba(124,92,255,.08);color:#ddd6fe">
+    📱 <b>手機用家：</b>加至主畫面就唔使次次打網址 ——
+    Android Chrome 右上角 ⋮ → 「加至主畫面」；iPhone Safari 分享 → 「加入主畫面」。
   </div>
 
   <div id="prog" class="card hide">
@@ -139,8 +154,8 @@ const drop = $('#drop'), fileInput = $('#file');
 const prog = $('#prog'), progtx = $('#progtx'), progbar = $('#progbar');
 const out = $('#out'), toast = $('#toast');
 
-drop.onclick = () => fileInput.click();
-fileInput.onchange = e => run([...e.target.files]);
+// ⛔ 冇 drop.onclick —— 揀檔全靠 <label for="file">，唔好加返 JS click（會自己撳自己）
+fileInput.onchange = e => { run([...e.target.files]); e.target.value = ''; };
 ['dragenter','dragover'].forEach(t => drop.addEventListener(t, e => {
   e.preventDefault(); drop.classList.add('hot');
 }));
