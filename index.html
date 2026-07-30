@@ -34,10 +34,16 @@
     background:rgba(52,211,153,.09);border:1px solid rgba(52,211,153,.32);
     color:#a7f3d0;font-size:13.5px;font-weight:600
   }
+  #dropwrap{position:relative;margin:26px 0 0}
   #drop{
-    display:block;margin:26px 0 0;border:2px dashed var(--line);border-radius:20px;
+    display:block;border:2px dashed var(--line);border-radius:20px;
     background:var(--card);padding:44px 22px;text-align:center;cursor:pointer;transition:.18s;
-    -webkit-user-select:none;user-select:none;
+    -webkit-user-select:none;user-select:none;pointer-events:none;   /* 唔好搶 input 嘅 tap */
+  }
+  /* 透明 input 鋪滿成個區 —— 撳邊一點都係撳中 input 本身 */
+  #file{
+    position:absolute;inset:0;width:100%;height:100%;
+    opacity:0;cursor:pointer;font-size:0;
   }
   #drop:hover,#drop.hot{border-color:var(--pur);background:var(--card2);transform:translateY(-2px)}
   #drop .ico{font-size:52px;line-height:1}
@@ -92,16 +98,22 @@
     <div class="privacy">🔒 全程喺你部機做 —— 份檔唔會上傳去任何伺服器</div>
   </header>
 
-  <!-- ⚠️ 一定要用 <label for>，唔好用 JS 去 click 一個藏喺 #drop 裡面嘅 input：
-       個 click 會由 input 反彈返上 #drop 再觸發一次，變成自己撳自己，
-       手機 Chrome 會直接封鎖，撳落去乜反應都冇。（2026-07-30 真實 bug）-->
-  <label id="drop" for="file">
-    <div class="ico">📄</div>
-    <div class="big">撳一下揀 PDF，或者拖份入嚟</div>
-    <div class="sm">可以一次過揀幾份 · 手機都用得 · 唔使安裝任何嘢</div>
-  </label>
-  <input id="file" type="file" accept=".pdf,application/pdf" multiple
-         style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)">
+  <!-- ⚠️⚠️ 手機揀檔嘅唯一可靠做法：將透明嘅 file input 直接鋪滿成個揀檔區，
+       撳落去撳中嘅本身就係 input，中間冇轉手。
+       試過唔 work 嘅做法（⛔唔好倒退返去）：
+         ① JS click 一個藏喺 #drop 裡面嘅 input → click 反彈返上 #drop 再觸發，
+            自己撳自己，手機 Chrome 直接封鎖（2026-07-30 大佬實機撞到）
+         ② <label for> + input 用 clip:rect(0 0 0 0) 隱藏 → 電腦通，Android 仍然冇反應
+       另外⛔唔好加 accept 過濾：Android 部分檔案管理員／Google Drive 會開咗個
+       空白選擇器，用家睇落就好似「撳咗冇反應」。-->
+  <div id="dropwrap">
+    <div id="drop">
+      <div class="ico">📄</div>
+      <div class="big">撳一下揀 PDF，或者拖份入嚟</div>
+      <div class="sm">可以一次過揀幾份 · 手機都用得 · 唔使安裝任何嘢</div>
+    </div>
+    <input id="file" type="file" multiple aria-label="揀 PDF 檔">
+  </div>
 
   <div class="note" style="border-left-color:var(--cy);background:rgba(34,211,238,.07);color:#a5f3fc">
     ⚠️ <b>幾時唔應該轉：</b>如果你本身就想 AI 睇<b>圖表、設計稿、掃描件</b>，就用原檔。
@@ -150,19 +162,19 @@ pdfjsLib.GlobalWorkerOptions.workerSrc =
   'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
 
 const $ = s => document.querySelector(s);
-const drop = $('#drop'), fileInput = $('#file');
+const wrap = $('#dropwrap'), drop = $('#drop'), fileInput = $('#file');
 const prog = $('#prog'), progtx = $('#progtx'), progbar = $('#progbar');
 const out = $('#out'), toast = $('#toast');
 
-// ⛔ 冇 drop.onclick —— 揀檔全靠 <label for="file">，唔好加返 JS click（會自己撳自己）
+// 揀檔同拖檔都由同一個入口：透明 input 鋪滿成區，撳落／拖落都係中佢，
+// 兩種情況都只會 fire 一次 change → 唔會撞單。⛔ 唔好加 JS click。
 fileInput.onchange = e => { run([...e.target.files]); e.target.value = ''; };
-['dragenter','dragover'].forEach(t => drop.addEventListener(t, e => {
-  e.preventDefault(); drop.classList.add('hot');
-}));
-['dragleave','drop'].forEach(t => drop.addEventListener(t, e => {
-  e.preventDefault(); drop.classList.remove('hot');
-}));
-drop.addEventListener('drop', e => run([...e.dataTransfer.files]));
+
+// 拖檔只負責亮起個框，唔負責收檔（收檔交返俾 input 原生行為）
+['dragenter', 'dragover'].forEach(t =>
+  wrap.addEventListener(t, e => { e.preventDefault(); drop.classList.add('hot'); }));
+['dragleave', 'drop'].forEach(t =>
+  wrap.addEventListener(t, () => drop.classList.remove('hot')));
 
 function say(msg, pct){ prog.classList.remove('hide'); progtx.textContent = msg; progbar.style.width = pct + '%'; }
 function esc(s){ return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
