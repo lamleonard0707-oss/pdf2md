@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PDF → Markdown｜慳返你部 AI 嘅額度 · LL Station</title>
+<meta name="description" content="將 PDF 一鍵轉成 Markdown，慳返 AI 八成幾額度。全程喺你部機做，份檔唔會上傳。">
+<meta property="og:title" content="PDF → Markdown｜慳返你部 AI 嘅額度">
+<meta property="og:description" content="一拖入去就轉好，自動複製，手機都用得。份檔唔會離開你部機。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
+<style>
+  :root{
+    --bg:#0b0a14; --card:#15132a; --card2:#1d1a38;
+    --pur:#7c5cff; --cy:#22d3ee; --ok:#34d399; --warn:#fbbf24;
+    --tx:#f4f2ff; --mut:#9a95bd; --line:#2c2850;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 600px at 50% -10%,#241f4d 0%,var(--bg) 60%) no-repeat,var(--bg);
+    color:var(--tx);min-height:100vh;
+    font-family:"PingFang HK","PingFang TC","Noto Sans HK","Microsoft JhengHei",system-ui,-apple-system,sans-serif;
+    line-height:1.65;padding:env(safe-area-inset-top) 16px calc(40px + env(safe-area-inset-bottom));
+  }
+  .wrap{max-width:720px;margin:0 auto}
+  header{text-align:center;padding:36px 0 8px}
+  .brand{font-size:13px;letter-spacing:.28em;color:var(--pur);font-weight:700}
+  h1{font-size:clamp(26px,6.4vw,38px);margin:12px 0 6px;line-height:1.25;font-weight:800}
+  h1 em{font-style:normal;background:linear-gradient(90deg,var(--pur),var(--cy));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--mut);font-size:15px;margin:0}
+  .privacy{
+    display:flex;gap:10px;align-items:center;justify-content:center;
+    margin:20px auto 0;padding:11px 16px;border-radius:999px;max-width:520px;
+    background:rgba(52,211,153,.09);border:1px solid rgba(52,211,153,.32);
+    color:#a7f3d0;font-size:13.5px;font-weight:600
+  }
+  #drop{
+    margin:26px 0 0;border:2px dashed var(--line);border-radius:20px;background:var(--card);
+    padding:44px 22px;text-align:center;cursor:pointer;transition:.18s;
+  }
+  #drop:hover,#drop.hot{border-color:var(--pur);background:var(--card2);transform:translateY(-2px)}
+  #drop .ico{font-size:52px;line-height:1}
+  #drop .big{font-size:19px;font-weight:800;margin-top:12px}
+  #drop .sm{color:var(--mut);font-size:13.5px;margin-top:6px}
+  .btn{
+    display:inline-block;border:0;border-radius:12px;padding:14px 22px;font-size:16px;font-weight:800;
+    cursor:pointer;font-family:inherit;color:#0b0a14;
+    background:linear-gradient(90deg,var(--pur),var(--cy));
+  }
+  .btn:active{transform:scale(.98)}
+  .btn.ghost{background:transparent;color:var(--tx);border:1px solid var(--line)}
+  .btn[disabled]{opacity:.5;cursor:default}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;margin-top:18px}
+  .bar{height:8px;border-radius:99px;background:var(--card2);overflow:hidden;margin-top:14px}
+  .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pur),var(--cy));transition:width .2s}
+  .saved{text-align:center;padding:6px 0 2px}
+  .saved b{display:block;font-size:clamp(52px,15vw,76px);line-height:1;font-weight:900;
+    background:linear-gradient(90deg,var(--ok),var(--cy));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .saved span{color:var(--mut);font-size:14px}
+  table.num{width:100%;border-collapse:collapse;margin-top:16px;font-size:14.5px}
+  table.num td{padding:9px 4px;border-top:1px solid var(--line)}
+  table.num td:last-child{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .row .btn{flex:1;min-width:140px;text-align:center}
+  pre{
+    background:#08070f;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px;
+    max-height:320px;overflow:auto;font-size:12.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word;
+    color:#cfc9f5;font-family:ui-monospace,SFMono-Regular,Menlo,monospace
+  }
+  .note{border-left:3px solid var(--warn);background:rgba(251,191,36,.08);padding:12px 14px;border-radius:0 10px 10px 0;margin-top:16px;font-size:14px;color:#fde68a}
+  details{margin-top:18px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px}
+  details summary{cursor:pointer;font-weight:800;font-size:15.5px}
+  details p,details li{color:var(--mut);font-size:14.5px}
+  footer{text-align:center;color:var(--mut);font-size:13px;margin-top:34px;line-height:2}
+  footer a{color:var(--cy);text-decoration:none}
+  .hide{display:none}
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+    background:var(--ok);color:#07281c;font-weight:800;padding:12px 22px;border-radius:999px;transition:.22s;z-index:9
+  }
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">LL STATION</div>
+    <h1>掉份 PDF 入嚟<br>一秒變 <em>AI 食得少</em> 嘅文字</h1>
+    <p class="sub">同一份嘢，AI 明到嘅一樣，額度慳返八成幾。</p>
+    <div class="privacy">🔒 全程喺你部機做 —— 份檔唔會上傳去任何伺服器</div>
+  </header>
+
+  <div id="drop">
+    <div class="ico">📄</div>
+    <div class="big">拖份 PDF 入嚟，或者撳一下揀檔</div>
+    <div class="sm">可以一次過揀幾份 · 手機都用得 · 唔使安裝任何嘢</div>
+    <input id="file" type="file" accept="application/pdf,.pdf" multiple hidden>
+  </div>
+
+  <div id="prog" class="card hide">
+    <div id="progtx">準備緊…</div>
+    <div class="bar"><i id="progbar"></i></div>
+  </div>
+
+  <div id="out" class="hide"></div>
+
+  <details>
+    <summary>點解慳到咁多？（30 秒睇完）</summary>
+    <p>你掉一份 PDF 俾 AI，佢<b>唔係「讀」你份嘢</b>——佢會將<b>每一頁 render 成一張圖片</b>，再連埋嗰頁嘅文字一齊送入去。官方文檔寫明：每頁大約食 1,500–3,000 個 token。</p>
+    <p>所以一份 20 頁嘅嘢，你一句都未問，已經燒咗成 5 萬。</p>
+    <p>轉成文字之後，AI 一樣睇到全部內容，但唔使再「影相」——慳嘅係嗰啲相，唔係執靚咗格式。</p>
+    <p><b>⚠️ 幾時唔應該轉：</b>如果你本身就想 AI 睇圖表、設計稿、掃描件，就用原檔。因為慳到嗰八成幾正正就係啲圖，轉完 AI 就睇唔到。</p>
+  </details>
+
+  <details>
+    <summary>想真·自動化，唔想次次上嚟呢版？</summary>
+    <p>如果你用緊 Claude Code、Cursor 呢啲 AI Agent，可以裝一次 MCP，之後掉份檔俾佢，<b>佢自己識轉</b>，你乜都唔使做：</p>
+    <pre>pip install markitdown-mcp
+claude mcp add markitdown -- markitdown-mcp</pre>
+    <p>裝完重開個 Agent，直接同佢講「幫我讀 ~/Downloads/報告.pdf」就得。</p>
+  </details>
+
+  <footer>
+    做嘢嘅係你部機自己，唔係我哋 —— 你 close 咗個網頁，乜都唔會留低。<br>
+    <a href="https://www.instagram.com/ll_station_ll/" target="_blank" rel="noopener">@ll_station_ll</a> · LL Station
+  </footer>
+</div>
+
+<div id="toast" class="toast">已經複製，去 AI 度 paste 得喇 ✅</div>
+
+<script type="module">
+import * as pdfjsLib from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs';
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs';
+
+const $ = s => document.querySelector(s);
+const drop = $('#drop'), fileInput = $('#file');
+const prog = $('#prog'), progtx = $('#progtx'), progbar = $('#progbar');
+const out = $('#out'), toast = $('#toast');
+
+drop.onclick = () => fileInput.click();
+fileInput.onchange = e => run([...e.target.files]);
+['dragenter','dragover'].forEach(t => drop.addEventListener(t, e => {
+  e.preventDefault(); drop.classList.add('hot');
+}));
+['dragleave','drop'].forEach(t => drop.addEventListener(t, e => {
+  e.preventDefault(); drop.classList.remove('hot');
+}));
+drop.addEventListener('drop', e => run([...e.dataTransfer.files]));
+
+function say(msg, pct){ prog.classList.remove('hide'); progtx.textContent = msg; progbar.style.width = pct + '%'; }
+function esc(s){ return s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+/* ── token 估算 ─────────────────────────────────────────────
+   文字：中日韓字 ≈ 1.14 token/字；其餘 ≈ 1 token / 4 字元
+         （用 20 頁中文樣本校準：14,586 字 → 實測 8,836 token）
+   圖片：Anthropic 公式 (闊×高)/750，最長邊 render 成 1568px
+         US Letter 612×792 → 1211×1568 → 2,533 token/頁（同實測對得返）*/
+const CJK = /[㐀-鿿豈-﫿぀-ヿ가-힯]/;
+function textTokens(s){
+  let cjk = 0, other = 0;
+  for (const ch of s) CJK.test(ch) ? cjk++ : other++;
+  return Math.round(cjk * 1.14 + other / 4);
+}
+function pageImageTokens(w, h){
+  const k = 1568 / Math.max(w, h);          // ⚠️ 會放大，唔止縮細
+  return Math.round((w * k) * (h * k) / 750);
+}
+
+/* ── 一頁 PDF → 結構化行 ──────────────────────────────────── */
+async function pageLines(page){
+  const tc = await page.getTextContent();
+  const raw = [];
+  for (const it of tc.items){
+    if (!it.str || !it.str.trim()) continue;
+    const t = it.transform;
+    raw.push({
+      x: t[4], y: t[5],
+      size: Math.abs(t[3]) || Math.hypot(t[2], t[3]) || 10,
+      w: it.width || 0, s: it.str,
+      bold: /bold|black|heavy|semibold/i.test(it.fontName || '')
+    });
+  }
+  raw.sort((a, b) => (Math.abs(a.y - b.y) > 3 ? b.y - a.y : a.x - b.x));
+
+  const lines = [];
+  for (const it of raw){
+    const L = lines[lines.length - 1];
+    if (L && Math.abs(L.y - it.y) <= Math.max(2.5, it.size * 0.45)) { L.items.push(it); }
+    else lines.push({ y: it.y, items: [it] });
+  }
+  return lines.map(L => {
+    L.items.sort((a, b) => a.x - b.x);
+    let text = '', cells = [], cur = '', curX = L.items[0].x, prevEnd = null;
+    let size = 0, chars = 0, bold = 0;
+    for (const it of L.items){
+      const gap = prevEnd === null ? 0 : it.x - prevEnd;
+      const big = gap > Math.max(it.size * 1.4, 14);      // 疑似欄位分隔
+      if (prevEnd !== null){
+        if (big){ cells.push({ x: curX, t: cur.trim() }); cur = ''; curX = it.x; text += '\t'; }
+        else if (gap > it.size * 0.22){ cur += ' '; text += ' '; }
+      }
+      cur += it.s; text += it.s;
+      prevEnd = it.x + it.w;
+      size += it.size * it.s.length; chars += it.s.length;
+      if (it.bold) bold += it.s.length;
+    }
+    cells.push({ x: curX, t: cur.trim() });
+    return {
+      y: L.y, x: L.items[0].x,
+      text: text.replace(/\s+/g, m => m.includes('\t') ? '\t' : ' ').trim(),
+      cells: cells.filter(c => c.t !== ''),
+      size: chars ? size / chars : 10,
+      bold: chars ? bold / chars > 0.6 : false
+    };
+  }).filter(l => l.text);
+}
+
+/* ── 行 → Markdown ───────────────────────────────────────── */
+function toMarkdown(pages, drops){
+  // 全份文件嘅「正文字級」= 出現最多字元嘅字級
+  const tally = new Map();
+  for (const p of pages) for (const l of p.lines)
+    tally.set(Math.round(l.size), (tally.get(Math.round(l.size)) || 0) + l.text.length);
+  const body = [...tally.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || 10;
+
+  const md = [];
+  let prevY = null, prevSize = body;
+
+  for (const p of pages){
+    // 只喺每頁頭兩行／尾兩行剷頁首頁尾，唔好連正文都掃埋
+    const edge = new Set([0, 1, p.lines.length - 2, p.lines.length - 1]);
+    const lines = p.lines.filter((l, k) => !(edge.has(k) && drops.has(mask(l.text))));
+    for (let i = 0; i < lines.length; i++){
+      const l = lines[i];
+
+      // ── 表格：連續 ≥2 行、每行 ≥2 欄
+      if (l.cells.length >= 2 && lines[i + 1]?.cells.length >= 2){
+        let j = i;
+        while (j + 1 < lines.length && lines[j + 1].cells.length >= 2) j++;
+        const run = lines.slice(i, j + 1);
+
+        // 欄邊界：將全部 cell 嘅 x 聚類（容差 16pt）
+        const cols = [];
+        for (const r of run) for (const c of r.cells){
+          const hit = cols.find(v => Math.abs(v - c.x) < 16);
+          if (hit === undefined) cols.push(c.x);
+        }
+        cols.sort((a, b) => a - b);
+        const colOf = x => {
+          let best = 0, bd = Infinity;
+          cols.forEach((v, k) => { const d = Math.abs(v - x); if (d < bd){ bd = d; best = k; } });
+          return best;
+        };
+
+        // 砌 row；行距好窄 = 同一格嘅換行，駁落上一 row 唔開新 row
+        const rows = [];
+        let prevRowY = null, prevRowSize = body;
+        for (const r of run){
+          const wrapped = prevRowY !== null &&
+                          (prevRowY - r.y) < Math.max(r.size, prevRowSize) * 1.32;
+          if (!wrapped || !rows.length) rows.push(new Array(cols.length).fill(''));
+          const row = rows[rows.length - 1];
+          for (const c of r.cells){
+            const k = colOf(c.x);
+            row[k] = row[k]
+              ? row[k] + (CJK.test(row[k].slice(-1)) && CJK.test(c.t[0]) ? '' : ' ') + c.t
+              : c.t;
+          }
+          prevRowY = r.y; prevRowSize = r.size;
+        }
+
+        // 太多空格 = 唔係表格，係「排到齊齊整整嘅文字」（例如論文作者欄），唔好硬砌成表
+        const filled = rows.flat().filter(Boolean).length;
+        const airy = cols.length >= 3 && filled / (rows.length * cols.length) < 0.45;
+
+        if (rows.length >= 2 && cols.length >= 2 && !airy){
+          const cell = s => s.replace(/\|/g, '\\|').trim();
+          md.push('');
+          md.push('| ' + rows[0].map(cell).join(' | ') + ' |');
+          md.push('|' + cols.map(() => '---').join('|') + '|');
+          for (const r of rows.slice(1)) md.push('| ' + r.map(cell).join(' | ') + ' |');
+          md.push('');
+          i = j; prevY = run[run.length - 1].y; prevSize = body;
+          continue;
+        }
+      }
+
+      const t = l.text.replace(/\t/g, ' ').replace(/\s{2,}/g, ' ').trim();
+      if (!t) continue;
+      const ratio = l.size / body;
+      const short = t.length < 42;
+      const gap = prevY === null ? 99 : prevY - l.y;
+
+      let line;
+      if (ratio >= 1.55 && short)              line = '## ' + t;
+      else if (ratio >= 1.22 && short)         line = '### ' + t;
+      else if (l.bold && short && ratio >= 1.0 && gap > l.size * 1.5) line = '### ' + t;
+      else if (/^[•‧·●▪○◦\-–—]\s*/.test(t))    line = '- ' + t.replace(/^[•‧·●▪○◦\-–—]\s*/, '');
+      else if (/^\(?\d{1,2}[.)、]\s+/.test(t)) line = t.replace(/^\(?(\d{1,2})[.)、]\s+/, '$1. ');
+      else                                     line = t;
+
+      const isHead = line.startsWith('#');
+      const newBlock = prevY === null || gap > Math.max(l.size, prevSize) * 1.55
+                       || isHead || md[md.length - 1]?.startsWith('#');
+
+      if (newBlock || /^[-\d]/.test(line) && line !== t){ md.push(''); md.push(line); }
+      else {
+        const last = md[md.length - 1];
+        // 同一段落：中文直接駁，英文加空格
+        if (last && !last.startsWith('#') && !last.startsWith('|') && last !== '')
+          md[md.length - 1] = last + (CJK.test(last.slice(-1)) && CJK.test(line[0]) ? '' : ' ') + line;
+        else md.push(line);
+      }
+      prevY = l.y; prevSize = l.size;
+    }
+    md.push('');
+  }
+  return md.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+}
+
+/* ── 找出頁首／頁尾／頁碼（喺過半數頁重複出現）─────────────
+   ⚠️ 比對之前要將數字遮住，唔然「12 | P a g e」同「13 | P a g e」
+      會當成兩句唔同嘅嘢，一句都清唔走。                        */
+const mask = s => s.trim().replace(/\d+/g, '#').replace(/\s+/g, ' ');
+function repeatedLines(pages){
+  const n = pages.length, cnt = new Map();
+  for (const p of pages){
+    const edge = [...p.lines.slice(0, 2), ...p.lines.slice(-2)];
+    for (const m of new Set(edge.map(l => mask(l.text)))) cnt.set(m, (cnt.get(m) || 0) + 1);
+  }
+  const drops = new Set();
+  if (n >= 3) for (const [m, c] of cnt) if (c >= Math.ceil(n * 0.5) && m.length < 90) drops.add(m);
+  // 純頁碼（「12」、「- 12 -」、「12 | Page」）一律當頁尾清走
+  drops.add('#'); drops.add('- # -'); drops.add('# | P a g e'); drops.add('#| P a g e');
+  return drops;
+}
+
+/* ── 主流程 ──────────────────────────────────────────────── */
+async function run(files){
+  files = files.filter(f => /\.pdf$/i.test(f.name) || f.type === 'application/pdf');
+  if (!files.length){ alert('淨係食 PDF 檔喎'); return; }
+  out.classList.add('hide'); out.innerHTML = '';
+  const results = [];
+
+  for (let fi = 0; fi < files.length; fi++){
+    const f = files[fi];
+    say(`讀緊《${f.name}》…`, 4);
+    try{
+      const buf = await f.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf, isEvalSupported: false }).promise;
+      const pages = [];
+      let imgTok = 0;
+      for (let n = 1; n <= pdf.numPages; n++){
+        const page = await pdf.getPage(n);
+        const vp = page.getViewport({ scale: 1 });
+        imgTok += pageImageTokens(vp.width, vp.height);
+        pages.push({ lines: await pageLines(page) });
+        say(`《${f.name}》第 ${n}／${pdf.numPages} 頁…`, Math.round(n / pdf.numPages * 92) + 4);
+        page.cleanup();
+      }
+      const md = toMarkdown(pages, repeatedLines(pages));
+      const after = textTokens(md);
+      results.push({ name: f.name.replace(/\.pdf$/i, ''), pages: pdf.numPages, md, imgTok, after });
+    }catch(err){
+      results.push({ name: f.name, error: err.message || String(err) });
+    }
+  }
+  prog.classList.add('hide');
+  window.__pdf2md = results;      // 方便自己 debug／自動測試
+  render(results);
+}
+
+function render(results){
+  out.classList.remove('hide');
+  results.forEach((r, i) => {
+    const box = document.createElement('div');
+    box.className = 'card';
+    if (r.error){
+      box.innerHTML = `<b>❌ ${esc(r.name)}</b><div class="note">開唔到呢份檔：${esc(r.error)}<br>如果係加密／有密碼嘅 PDF，要先解鎖。</div>`;
+      out.appendChild(box); return;
+    }
+    const before = r.imgTok + r.after;
+    const pct = Math.max(0, Math.round((1 - r.after / before) * 100));
+    const scanned = r.md.replace(/\s/g, '').length < r.pages * 40;
+
+    box.innerHTML = `
+      <div style="font-weight:800;font-size:16px">${esc(r.name)} · ${r.pages} 頁</div>
+      ${scanned ? `<div class="note">⚠️ 呢份 PDF 幾乎抽唔到文字，好可能係<b>掃描件／影相出嚟</b>（冇文字層）。呢種情況慳唔到，照用原檔啦。</div>` : ''}
+      <div class="saved"><b>-${pct}%</b><span>同一份嘢，AI 一樣明，但食少咗</span></div>
+      <table class="num">
+        <tr><td>直接掉原本份 PDF 入 AI</td><td>≈ ${before.toLocaleString()}</td></tr>
+        <tr><td>　└ 其中「影相」嘅部分</td><td>≈ ${r.imgTok.toLocaleString()}</td></tr>
+        <tr><td>轉完 Markdown 之後</td><td>≈ ${r.after.toLocaleString()}</td></tr>
+      </table>
+      <div class="row">
+        <button class="btn" data-copy="${i}">📋 複製全部</button>
+        <button class="btn ghost" data-dl="${i}">⬇️ 存 .md 檔</button>
+        <button class="btn ghost" data-pv="${i}">👁 睇下內容</button>
+      </div>
+      <pre class="hide" data-pre="${i}">${esc(r.md.slice(0, 6000))}${r.md.length > 6000 ? '\n\n…（仲有，複製會攞晒）' : ''}</pre>`;
+    out.appendChild(box);
+
+    box.querySelector(`[data-copy="${i}"]`).onclick = () => copy(r.md);
+    box.querySelector(`[data-dl="${i}"]`).onclick = () => download(r.name + '.md', r.md);
+    box.querySelector(`[data-pv="${i}"]`).onclick = e => {
+      const pre = box.querySelector(`[data-pre="${i}"]`);
+      pre.classList.toggle('hide');
+      e.target.textContent = pre.classList.contains('hide') ? '👁 睇下內容' : '🙈 收埋';
+    };
+  });
+
+  // 得一份 → 直接幫你 copy 好，去 AI 度 paste 就得
+  const only = results.length === 1 && !results[0].error;
+  if (only) copy(results[0].md, true);
+  out.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function copy(text, quiet){
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast('已經複製，去 AI 度 paste 得喇 ✅');
+  }catch{
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    if (ok) showToast('已經複製 ✅');
+    else if (!quiet) showToast('部機唔俾自動複製，撳「睇下內容」自己揀啦');
+  }
+}
+function download(name, text){
+  const url = URL.createObjectURL(new Blob([text], { type: 'text/markdown;charset=utf-8' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = name;          // 有正常檔名 + .md 副檔名
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  showToast('存好喇，喺「下載」資料夾 📁');
+}
+let tt;
+function showToast(msg){
+  toast.textContent = msg; toast.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(() => toast.classList.remove('on'), 2600);
+}
+</script>
+</body>
+</html>

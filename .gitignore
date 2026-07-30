@@ -1,0 +1,4 @@
+# ⛔ 測試用 PDF 一律唔上 repo（有內部／第三方文件，publish 出去會出事）
+_testpdf/
+*.pdf
+*.md.out
