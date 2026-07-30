@@ -106,6 +106,17 @@
          ② <label for> + input 用 clip:rect(0 0 0 0) 隱藏 → 電腦通，Android 仍然冇反應
        另外⛔唔好加 accept 過濾：Android 部分檔案管理員／Google Drive 會開咗個
        空白選擇器，用家睇落就好似「撳咗冇反應」。-->
+  <!-- App 內建瀏覽器（Telegram／FB／IG WebView）好多都封鎖檔案選擇器，
+       撳落去乜反應都冇。偵測到就叫用家跳去 Chrome。（2026-07-30 實機症狀）-->
+  <div id="inapp" class="note hide" style="border-left-color:#f87171;background:rgba(248,113,113,.1);color:#fecaca">
+    ⚠️ <b>你而家用 App 內建瀏覽器開緊呢一頁</b>，好多 App 嘅內建瀏覽器會封鎖「揀檔案」，
+    撳落去會冇反應。<br><br>
+    <button id="openchrome" class="btn" style="margin-top:4px">👉 用 Chrome／Safari 開</button>
+    <div style="font-size:13px;margin-top:10px;opacity:.85">
+      唔 work 就自己嚟：撳右上角 ⋮ 或者 ⋯ → 「在瀏覽器中打開 / Open in browser」
+    </div>
+  </div>
+
   <div id="dropwrap">
     <div id="drop">
       <div class="ico">📄</div>
@@ -113,6 +124,16 @@
       <div class="sm">可以一次過揀幾份 · 手機都用得 · 唔使安裝任何嘢</div>
     </div>
     <input id="file" type="file" multiple aria-label="揀 PDF 檔">
+  </div>
+
+  <!-- 後備：明擺出嚟嘅原生揀檔掣。透明層萬一被封鎖，呢個仲有機會通。 -->
+  <div style="text-align:center;margin-top:12px">
+    <label for="file2" class="btn" style="display:inline-block">📎 撳我揀 PDF（後備掣）</label>
+    <input id="file2" type="file" multiple aria-label="揀 PDF 檔（後備）"
+           style="position:absolute;width:1px;height:1px;opacity:0">
+    <div id="pickstat" style="color:var(--mut);font-size:13px;margin-top:10px">
+      仲未揀檔
+    </div>
   </div>
 
   <div class="note" style="border-left-color:var(--cy);background:rgba(34,211,238,.07);color:#a5f3fc">
@@ -168,7 +189,37 @@ const out = $('#out'), toast = $('#toast');
 
 // 揀檔同拖檔都由同一個入口：透明 input 鋪滿成區，撳落／拖落都係中佢，
 // 兩種情況都只會 fire 一次 change → 唔會撞單。⛔ 唔好加 JS click。
-fileInput.onchange = e => { run([...e.target.files]); e.target.value = ''; };
+const stat = $('#pickstat');
+function intake(e) {
+  const fs = [...e.target.files];
+  stat.textContent = fs.length ? `✅ 揀到 ${fs.length} 個檔：${fs.map(f => f.name).join('、')}`
+                               : '⚠️ 揀完但收唔到檔 —— 請用 Chrome／Safari 開呢一頁';
+  stat.style.color = fs.length ? 'var(--ok)' : '#fca5a5';
+  run(fs);
+  e.target.value = '';
+}
+fileInput.onchange = intake;
+$('#file2').onchange = intake;
+
+// ── App 內建瀏覽器偵測（Telegram／FB／IG／LINE WebView 多數封鎖揀檔）──
+(() => {
+  const ua = navigator.userAgent;
+  const inApp = /\bFB[A-Z]{2}\/|Instagram|Line\/|MicroMessenger|TelegramBot/i.test(ua)
+             || (/Android/.test(ua) && /\bwv\b/.test(ua))                       // Android WebView
+             || (/iPhone|iPad/.test(ua) && !/Safari/.test(ua) && !/CriOS|FxiOS/.test(ua));
+  if (!inApp) return;
+  $('#inapp').classList.remove('hide');
+  $('#openchrome').onclick = () => {
+    const url = location.href.split('#')[0];
+    if (/Android/.test(ua)) {
+      // intent: 會叫起真 Chrome
+      location.href = 'intent://' + url.replace(/^https?:\/\//, '')
+        + '#Intent;scheme=https;package=com.android.chrome;end';
+    } else {
+      location.href = url;   // iOS：唔可以強制跳，靠上面文字指引
+    }
+  };
+})();
 
 // 拖檔只負責亮起個框，唔負責收檔（收檔交返俾 input 原生行為）
 ['dragenter', 'dragover'].forEach(t =>
