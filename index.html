@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>PDF → Markdown｜慳返你部 AI 嘅額度 · LL Station</title>
-<meta name="description" content="將 PDF 一鍵轉成 Markdown，慳返 AI 八成幾額度。全程喺你部機做，份檔唔會上傳。">
-<meta property="og:title" content="PDF → Markdown｜慳返你部 AI 嘅額度">
-<meta property="og:description" content="一拖入去就轉好，自動複製，手機都用得。份檔唔會離開你部機。">
+<title>PDF → Markdown｜節省你的 AI 用量 · LL Station</title>
+<meta name="description" content="將 PDF 一鍵轉成 Markdown，節省約八成半 AI 用量。全程在你的裝置上完成，檔案不會上傳。">
+<meta property="og:title" content="PDF → Markdown｜節省你的 AI 用量">
+<meta property="og:description" content="拖進去即完成轉換，自動複製，手機同樣適用。檔案不會離開你的裝置。">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
 <style>
   :root{
@@ -93,12 +93,15 @@
 
   <header>
     <div class="brand">LL STATION</div>
-    <h1>掉份 PDF 入嚟<br>一秒變 <em>AI 食得少</em> 嘅文字</h1>
-    <p class="sub">同一份嘢，AI 明到嘅一樣，額度慳返八成幾。</p>
-    <div class="privacy">🔒 全程喺你部機做 —— 份檔唔會上傳去任何伺服器</div>
+    <h1>把 PDF 放進來<br>一秒變成 <em>AI 更省用量</em>的文字</h1>
+    <p class="sub">同一份文件，AI 理解到的內容一樣，用量卻可節省約八成半。</p>
+    <div style="text-align:right;margin:-6px 0 10px">
+      <button id="langbtn" class="btn" style="padding:6px 14px;font-size:13px;opacity:.9">EN</button>
+    </div>
+    <div class="privacy">🔒 全程在你的裝置上完成 —— 檔案不會上傳到任何伺服器</div>
   </header>
 
-  <!-- ⚠️⚠️ 手機揀檔嘅唯一可靠做法：將透明嘅 file input 直接鋪滿成個揀檔區，
+  <!-- ⚠️⚠️ 手機揀檔嘅唯一可靠做法：將透明嘅 file input 直接鋪滿成個選檔區，
        撳落去撳中嘅本身就係 input，中間冇轉手。
        試過唔 work 嘅做法（⛔唔好倒退返去）：
          ① JS click 一個藏喺 #drop 裡面嘅 input → click 反彈返上 #drop 再觸發，
@@ -109,76 +112,184 @@
   <!-- App 內建瀏覽器（Telegram／FB／IG WebView）好多都封鎖檔案選擇器，
        撳落去乜反應都冇。偵測到就叫用家跳去 Chrome。（2026-07-30 實機症狀）-->
   <div id="inapp" class="note" style="border-left-color:#f87171;background:rgba(248,113,113,.1);color:#fecaca">
-    ⚠️ <b>由 Telegram／FB／IG 撳入嚟？</b> 呢啲 App 嘅內建瀏覽器會封鎖「揀檔案」，撳極都冇反應。<br>
-    <b>撳唔到就撳呢個掣跳去 Chrome。</b><br><br>
-    <button id="openchrome" class="btn" style="margin-top:4px">👉 用 Chrome／Safari 開</button>
+    ⚠️ <b>從 Telegram／FB／IG 點進來？</b> 這些 App 的內建瀏覽器會封鎖「選擇檔案」，按下去不會有反應。<br>
+    <b>無法選檔，請按下方按鈕改用 Chrome 開啟。</b><br><br>
+    <button id="openchrome" class="btn" style="margin-top:4px">👉 改用 Chrome／Safari 開啟</button>
     <div style="font-size:13px;margin-top:10px;opacity:.85">
-      唔 work 就自己嚟：撳右上角 ⋮ 或者 ⋯ → 「在瀏覽器中打開 / Open in browser」
+      若按鈕無效，可自行操作：按右上角 ⋮ 或 ⋯ →「在瀏覽器中開啟」
     </div>
   </div>
 
   <div id="dropwrap">
     <div id="drop">
       <div class="ico">📄</div>
-      <div class="big">撳一下揀 PDF，或者拖份入嚟</div>
-      <div class="sm">可以一次過揀幾份 · 手機都用得 · 唔使安裝任何嘢</div>
+      <div class="big">點一下選擇 PDF，或將檔案拖進來</div>
+      <div class="sm">可一次選擇多份 · 手機同樣適用 · 無需安裝任何軟件</div>
     </div>
     <input id="file" type="file" multiple aria-label="揀 PDF 檔">
   </div>
 
   <!-- 後備：明擺出嚟嘅原生揀檔掣。透明層萬一被封鎖，呢個仲有機會通。 -->
   <div style="text-align:center;margin-top:12px">
-    <label for="file2" class="btn" style="display:inline-block">📎 撳我揀 PDF（後備掣）</label>
+    <label for="file2" class="btn" style="display:inline-block">📎 選擇 PDF（備用按鈕）</label>
     <input id="file2" type="file" multiple aria-label="揀 PDF 檔（後備）"
            style="position:absolute;width:1px;height:1px;opacity:0">
     <div id="pickstat" style="color:var(--mut);font-size:13px;margin-top:10px">
-      仲未揀檔
+      尚未選擇檔案
     </div>
     <div id="ualine" style="color:var(--mut);font-size:11px;margin-top:6px;opacity:.6;
          word-break:break-all"></div>
   </div>
 
   <div class="note" style="border-left-color:var(--cy);background:rgba(34,211,238,.07);color:#a5f3fc">
-    ⚠️ <b>幾時唔應該轉：</b>如果你本身就想 AI 睇<b>圖表、設計稿、掃描件</b>，就用原檔。
-    因為慳到嗰八成幾正正就係啲圖，轉完 AI 就睇唔到。
+    ⚠️ <b>什麼情況不建議轉換：</b>如果你本來就想讓 AI 看<b>圖表、設計稿、掃描件</b>，請直接使用原檔。
+    因為省下的那八成半正正就是圖片，轉換後 AI 便看不到了。
   </div>
 
   <div class="note" style="border-left-color:var(--pur);background:rgba(124,92,255,.08);color:#ddd6fe">
-    📱 <b>手機用家：</b>加至主畫面就唔使次次打網址 ——
-    Android Chrome 右上角 ⋮ → 「加至主畫面」；iPhone Safari 分享 → 「加入主畫面」。
+    📱 <b>手機用戶：</b>加到主畫面便不必每次輸入網址 ——
+    Android Chrome 右上角 ⋮ →「加至主畫面」；iPhone Safari 分享 →「加入主畫面」。
   </div>
 
   <div id="prog" class="card hide">
-    <div id="progtx">準備緊…</div>
+    <div id="progtx">準備中…</div>
     <div class="bar"><i id="progbar"></i></div>
   </div>
 
   <div id="out" class="hide"></div>
 
   <details>
-    <summary>點解慳到咁多？（30 秒睇完）</summary>
-    <p>你掉一份 PDF 俾 AI，佢<b>唔係「讀」你份嘢</b>——佢會將<b>每一頁 render 成一張圖片</b>，再連埋嗰頁嘅文字一齊送入去。官方文檔寫明：每頁大約食 1,500–3,000 個 token。</p>
-    <p>所以一份 20 頁嘅嘢，你一句都未問，已經燒咗成 5 萬。</p>
-    <p>轉成文字之後，AI 一樣睇到全部內容，但唔使再「影相」——慳嘅係嗰啲相，唔係執靚咗格式。</p>
-    <p><b>⚠️ 幾時唔應該轉：</b>如果你本身就想 AI 睇圖表、設計稿、掃描件，就用原檔。因為慳到嗰八成幾正正就係啲圖，轉完 AI 就睇唔到。</p>
+    <summary>為什麼可以省這麼多？（30 秒讀完）</summary>
+    <p>當你把一份 PDF 交給 AI，它<b>並不是在「讀」你的文件</b>——它會把<b>每一頁轉成一張圖片</b>，再連同該頁的文字一併送入模型。官方文件說明：每頁約消耗 1,500–3,000 個 token。</p>
+    <p>所以一份 20 頁的文件，你一個問題都還沒問，就已經耗用近 5 萬 token。</p>
+    <p>轉成文字之後，AI 一樣能看到全部內容，但不必再「拍照」——節省的是那些圖片，而不是把格式整理得更漂亮。</p>
+    <p><b>⚠️ 什麼情況不建議轉換：</b>如果你本來就想讓 AI 看圖表、設計稿、掃描件，請直接使用原檔。因為省下的那八成半正正就是圖片，轉換後 AI 便看不到了。</p>
   </details>
 
   <details>
-    <summary>想真·自動化，唔想次次上嚟呢版？</summary>
-    <p>如果你用緊 Claude Code、Cursor 呢啲 AI Agent，可以裝一次 MCP，之後掉份檔俾佢，<b>佢自己識轉</b>，你乜都唔使做：</p>
+    <summary>想真正自動化，不必每次都開這個網頁？</summary>
+    <p>如果你正在使用 Claude Code、Cursor 這類 AI Agent，只需安裝一次 MCP，日後把檔案交給它，<b>它就會自動轉換</b>，你什麼都不用做：</p>
     <pre>pip install markitdown-mcp
 claude mcp add markitdown -- markitdown-mcp</pre>
-    <p>裝完重開個 Agent，直接同佢講「幫我讀 ~/Downloads/報告.pdf」就得。</p>
+    <p>安裝後重新啟動 Agent，直接對它說「幫我讀 ~/Downloads/報告.pdf」即可。</p>
+    <p style="margin-top:14px">
+      想先了解 MarkItDown 是什麼？它是微軟開源的文件轉換工具，本頁的原理與它一致：<br>
+      🔗 <a href="https://github.com/microsoft/markitdown" target="_blank" rel="noopener">github.com/microsoft/markitdown</a>（官方專案）<br>
+      🔗 <a href="https://github.com/microsoft/markitdown/tree/main/packages/markitdown-mcp" target="_blank" rel="noopener">markitdown-mcp</a>（給 AI Agent 用的 MCP 版本）
+    </p>
   </details>
 
   <footer>
-    做嘢嘅係你部機自己，唔係我哋 —— 你 close 咗個網頁，乜都唔會留低。<br>
+    轉換由你的裝置自行完成，並非經由我們的伺服器 —— 關閉網頁後不會留下任何資料。<br>
     <a href="https://www.instagram.com/ll_station_ll/" target="_blank" rel="noopener">@ll_station_ll</a> · LL Station
   </footer>
 </div>
 
-<div id="toast" class="toast">已經複製，去 AI 度 paste 得喇 ✅</div>
+<div id="toast" class="toast">已複製，可直接貼上到 AI ✅</div>
 
+
+<script>
+/* ── 中／英雙語（大佬 2026-07-30：「有中英文介面可以俾人選擇」）──
+   做法：唔改 markup 結構，改為喺 load 之後行勻所有 text node，
+   用「中文原文」做 key 查英文。動態字串就經 window.t() 走同一本字典。 */
+window.I18N_EN = {
+"把 PDF 放進來": "Drop your PDF here",
+"一秒變成": "and turn it into ",
+"AI 更省用量": "AI-friendly",
+"的文字": " text in one second",
+"同一份文件，AI 理解到的內容一樣，用量卻可節省約八成半。": "Same document, same understanding for the AI — but around 85% less usage.",
+"🔒 全程在你的裝置上完成 —— 檔案不會上傳到任何伺服器": "🔒 Everything runs on your device — your file is never uploaded to any server",
+"從 Telegram／FB／IG 點進來？": "Opened this from Telegram / FB / IG?",
+"這些 App 的內建瀏覽器會封鎖「選擇檔案」，按下去不會有反應。": "Their in-app browsers block the file picker, so nothing happens when you tap.",
+"無法選檔，請按下方按鈕改用 Chrome 開啟。": "If you can't pick a file, use the button below to open this page in Chrome.",
+"👉 改用 Chrome／Safari 開啟": "👉 Open in Chrome / Safari",
+"若按鈕無效，可自行操作：按右上角 ⋮ 或 ⋯ →「在瀏覽器中開啟」": "If that doesn't work: tap ⋮ or ⋯ at the top right → \"Open in browser\"",
+"點一下選擇 PDF，或將檔案拖進來": "Tap to choose a PDF, or drag one in",
+"可一次選擇多份 · 手機同樣適用 · 無需安裝任何軟件": "Multiple files at once · Works on mobile · Nothing to install",
+"📎 選擇 PDF（備用按鈕）": "📎 Choose PDF (backup button)",
+"尚未選擇檔案": "No file selected yet",
+"什麼情況不建議轉換：": "When not to convert:",
+"如果你本來就想讓 AI 看": "If you actually want the AI to look at ",
+"圖表、設計稿、掃描件": "charts, design files or scans",
+"，請直接使用原檔。 因為省下的那八成半正正就是圖片，轉換後 AI 便看不到了。": ", use the original file. The 85% you'd save is exactly those images — convert it and the AI can no longer see them.",
+"手機用戶：": "On mobile:",
+"加到主畫面便不必每次輸入網址 —— Android Chrome 右上角 ⋮ →「加至主畫面」；iPhone Safari 分享 →「加入主畫面」。": "Add this to your home screen so you don't have to type the address each time — Android Chrome: ⋮ → \"Add to Home screen\"; iPhone Safari: Share → \"Add to Home Screen\".",
+"準備中…": "Getting ready…",
+"為什麼可以省這麼多？（30 秒讀完）": "Why does this save so much? (30-second read)",
+"當你把一份 PDF 交給 AI，它": "When you hand a PDF to an AI, it ",
+"並不是在「讀」你的文件": "is not \"reading\" your document",
+"——它會把": " — it turns ",
+"每一頁轉成一張圖片": "every page into an image",
+"，再連同該頁的文字一併送入模型。官方文件說明：每頁約消耗 1,500–3,000 個 token。": ", then sends that image along with the page's text into the model. The official docs put this at roughly 1,500–3,000 tokens per page.",
+"所以一份 20 頁的文件，你一個問題都還沒問，就已經耗用近 5 萬 token。": "So a 20-page document burns close to 50,000 tokens before you've asked a single question.",
+"轉成文字之後，AI 一樣能看到全部內容，但不必再「拍照」——節省的是那些圖片，而不是把格式整理得更漂亮。": "Once it's text, the AI still sees everything — it just doesn't have to \"photograph\" it. What you save are the images, not prettier formatting.",
+"⚠️ 什麼情況不建議轉換：": "⚠️ When not to convert:",
+"如果你本來就想讓 AI 看圖表、設計稿、掃描件，請直接使用原檔。因為省下的那八成半正正就是圖片，轉換後 AI 便看不到了。": "If you actually want the AI to read charts, design files or scans, use the original. The 85% you'd save is exactly those images.",
+"想真正自動化，不必每次都開這個網頁？": "Want it fully automated, without opening this page every time?",
+"如果你正在使用 Claude Code、Cursor 這類 AI Agent，只需安裝一次 MCP，日後把檔案交給它，": "If you use an AI agent like Claude Code or Cursor, install the MCP once and from then on, hand it a file and",
+"它就會自動轉換": "it converts automatically",
+"，你什麼都不用做：": " — nothing else to do:",
+"安裝後重新啟動 Agent，直接對它說「幫我讀 ~/Downloads/報告.pdf」即可。": "Restart the agent afterwards and just say \"read ~/Downloads/report.pdf\".",
+"想先了解 MarkItDown 是什麼？它是微軟開源的文件轉換工具，本頁的原理與它一致：": "Curious what MarkItDown is? It's Microsoft's open-source document converter — this page works on the same principle:",
+"（官方專案）": "(official project)",
+"（給 AI Agent 用的 MCP 版本）": "(MCP build for AI agents)",
+"轉換由你的裝置自行完成，並非經由我們的伺服器 —— 關閉網頁後不會留下任何資料。": "The conversion happens on your own device, not on our servers — close the page and nothing is left behind.",
+"已複製，可直接貼上到 AI ✅": "Copied — paste it straight into your AI ✅",
+"PDF → Markdown｜節省你的 AI 用量 · LL Station": "PDF → Markdown | Save your AI usage · LL Station",
+"✅ 已選擇": "✅ Selected",
+"個檔案：": " file(s): ",
+"⚠️ 已選擇但接收不到檔案 —— 請改用 Chrome／Safari 開啟本頁": "⚠️ Picked, but no file came through — please open this page in Chrome / Safari",
+"👆 已收到你的操作（": "👆 Got your tap (",
+"）… 正在等待選擇檔案的畫面": ") … waiting for the file picker",
+"⚠️ 已按下，但選擇檔案的畫面沒有出現 —— 你很可能正在使用 App 內建瀏覽器，請按上方「改用 Chrome 開啟」": "⚠️ Tapped, but no file picker appeared — you're probably in an in-app browser. Use \"Open in Chrome\" above.",
+"選檔區": "drop zone",
+"備用按鈕": "backup button"
+};
+(function () {
+  const norm = t => t.trim().replace(/\s+/g, ' ');
+  window.t = function (zh) {
+    return (localStorage.getItem('lang') === 'en' && window.I18N_EN[norm(zh)]) || zh;
+  };
+  let nodes = [];
+  function collect() {
+    const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode(n) {
+        const p = n.parentNode.nodeName;
+        if (p === 'SCRIPT' || p === 'STYLE' || p === 'PRE') return NodeFilter.FILTER_REJECT;
+        return n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      }
+    });
+    let n; while ((n = w.nextNode())) { n.__zh = n.nodeValue; nodes.push(n); }
+  }
+  window.applyLang = function (lang) {
+    localStorage.setItem('lang', lang);
+    document.documentElement.lang = lang === 'en' ? 'en' : 'zh-HK';
+    nodes.forEach(n => {
+      if (lang === 'en') {
+        const en = window.I18N_EN[norm(n.__zh)];
+        if (en) {
+          const lead = (n.__zh.match(/^\s*/) || [''])[0];
+          const tail = (n.__zh.match(/\s*$/) || [''])[0];
+          n.nodeValue = lead + en + tail;
+        }
+      } else n.nodeValue = n.__zh;
+    });
+    const T = window.I18N_EN['PDF → Markdown｜節省你的 AI 用量 · LL Station'];
+    document.title = lang === 'en' && T ? T
+      : 'PDF → Markdown｜節省你的 AI 用量 · LL Station';
+    const b = document.getElementById('langbtn');
+    if (b) b.textContent = lang === 'en' ? '中文' : 'EN';
+  };
+  document.addEventListener('DOMContentLoaded', () => {
+    collect();
+    const saved = localStorage.getItem('lang')
+      || (/^zh/i.test(navigator.language || '') ? 'zh' : 'en');   // 中文系統預設中文
+    applyLang(saved);
+    document.getElementById('langbtn').addEventListener('click', () =>
+      applyLang(localStorage.getItem('lang') === 'en' ? 'zh' : 'en'));
+  });
+})();
+</script>
 <script type="module">
 import * as pdfjsLib from 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs';
 pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -194,8 +305,9 @@ const out = $('#out'), toast = $('#toast');
 const stat = $('#pickstat');
 function intake(e) {
   const fs = [...e.target.files];
-  stat.textContent = fs.length ? `✅ 揀到 ${fs.length} 個檔：${fs.map(f => f.name).join('、')}`
-                               : '⚠️ 揀完但收唔到檔 —— 請用 Chrome／Safari 開呢一頁';
+  stat.textContent = fs.length
+    ? `${t('✅ 已選擇')} ${fs.length}${t('個檔案：')}${fs.map(f => f.name).join('、')}`
+    : t('⚠️ 已選擇但接收不到檔案 —— 請改用 Chrome／Safari 開啟本頁');
   stat.style.color = fs.length ? 'var(--ok)' : '#fca5a5';
   run(fs);
   e.target.value = '';
@@ -211,14 +323,14 @@ window.addEventListener('blur', () => { pickerOpened = true; });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pickerOpened = true; });
 function markTap(where) {
   tapped++;
-  stat.textContent = `👆 收到你撳（${where}）… 等緊揀檔畫面彈出`;
+  stat.textContent = `${t('👆 已收到你的操作（')}${t(where)}${t('）… 正在等待選擇檔案的畫面')}`;
   stat.style.color = 'var(--mut)';
   // ⚠️ 揀檔畫面真係彈到出嚟嗰陣，個頁會失焦／被蓋住 → 收到就取消警告，
   //    唔好喺「其實 work 咗」嘅用家面前彈紅字。
   pickerOpened = false;
   setTimeout(() => {
     if (!pickerOpened && tapped && stat.textContent.startsWith('👆')) {
-      stat.textContent = '⚠️ 撳咗但揀檔畫面冇彈出 —— 你多數用緊 App 內建瀏覽器，請撳上面「用 Chrome 開」';
+      stat.textContent = t('⚠️ 已按下，但選擇檔案的畫面沒有出現 —— 你很可能正在使用 App 內建瀏覽器，請按上方「改用 Chrome 開啟」');
       stat.style.color = '#fca5a5';
     }
   }, 2500);
@@ -226,9 +338,9 @@ function markTap(where) {
 // ⚠️ 唔可以 listen #drop —— 透明嘅 <input id=file> 鋪喺佢上面，會食晒 pointer event
 //    （Playwright 實測：click #drop 會被 input intercept，30 秒 timeout）。
 //    所以 listen 外層 #dropwrap 並且用 capture，邊個 child 收到都捉得到。
-$('#dropwrap').addEventListener('click', () => markTap('揀檔區'), true);
-$('#file').addEventListener('click', () => markTap('揀檔區'), true);
-document.querySelector('label[for=file2]').addEventListener('click', () => markTap('後備掣'), true);
+$('#dropwrap').addEventListener('click', () => markTap('選檔區'), true);
+$('#file').addEventListener('click', () => markTap('選檔區'), true);
+document.querySelector('label[for=file2]').addEventListener('click', () => markTap('備用按鈕'), true);
 
 // 實機 debug 用：顯示 User-Agent（我上次靠 UA 偵測認唔到 Telegram WebView）
 $('#ualine').textContent = navigator.userAgent;
@@ -488,7 +600,7 @@ function render(results){
     const box = document.createElement('div');
     box.className = 'card';
     if (r.error){
-      box.innerHTML = `<b>❌ ${esc(r.name)}</b><div class="note">開唔到呢份檔：${esc(r.error)}<br>如果係加密／有密碼嘅 PDF，要先解鎖。</div>`;
+      box.innerHTML = `<b>❌ ${esc(r.name)}</b><div class="note">無法開啟此檔案：${esc(r.error)}<br>若為加密或有密碼的 PDF，請先解除保護。</div>`;
       out.appendChild(box); return;
     }
     const before = r.imgTok + r.after;
@@ -497,19 +609,19 @@ function render(results){
 
     box.innerHTML = `
       <div style="font-weight:800;font-size:16px">${esc(r.name)} · ${r.pages} 頁</div>
-      ${scanned ? `<div class="note">⚠️ 呢份 PDF 幾乎抽唔到文字，好可能係<b>掃描件／影相出嚟</b>（冇文字層）。呢種情況慳唔到，照用原檔啦。</div>` : ''}
-      <div class="saved"><b>-${pct}%</b><span>同一份嘢，AI 一樣明，但食少咗</span></div>
+      ${scanned ? `<div class="note">⚠️ 這份 PDF 幾乎抽取不到文字，很可能是<b>掃描件或拍照而成</b>（沒有文字層）。這種情況無法節省用量，請直接使用原檔。</div>` : ''}
+      <div class="saved"><b>-${pct}%</b><span>同一份文件，AI 一樣理解，但用量減少</span></div>
       <table class="num">
-        <tr><td>直接掉原本份 PDF 入 AI</td><td>≈ ${before.toLocaleString()}</td></tr>
-        <tr><td>　└ 其中「影相」嘅部分</td><td>≈ ${r.imgTok.toLocaleString()}</td></tr>
-        <tr><td>轉完 Markdown 之後</td><td>≈ ${r.after.toLocaleString()}</td></tr>
+        <tr><td>直接把原本的 PDF 交給 AI</td><td>≈ ${before.toLocaleString()}</td></tr>
+        <tr><td>　└ 其中「圖片」的部分</td><td>≈ ${r.imgTok.toLocaleString()}</td></tr>
+        <tr><td>轉換成 Markdown 之後</td><td>≈ ${r.after.toLocaleString()}</td></tr>
       </table>
       <div class="row">
         <button class="btn" data-copy="${i}">📋 複製全部</button>
-        <button class="btn ghost" data-dl="${i}">⬇️ 存 .md 檔</button>
-        <button class="btn ghost" data-pv="${i}">👁 睇下內容</button>
+        <button class="btn ghost" data-dl="${i}">⬇️ 下載 .md 檔</button>
+        <button class="btn ghost" data-pv="${i}">👁 檢視內容</button>
       </div>
-      <pre class="hide" data-pre="${i}">${esc(r.md.slice(0, 6000))}${r.md.length > 6000 ? '\n\n…（仲有，複製會攞晒）' : ''}</pre>`;
+      <pre class="hide" data-pre="${i}">${esc(r.md.slice(0, 6000))}${r.md.length > 6000 ? '\n\n…（尚有更多，複製時會取得全部）' : ''}</pre>`;
     out.appendChild(box);
 
     box.querySelector(`[data-copy="${i}"]`).onclick = () => copy(r.md);
@@ -517,7 +629,7 @@ function render(results){
     box.querySelector(`[data-pv="${i}"]`).onclick = e => {
       const pre = box.querySelector(`[data-pre="${i}"]`);
       pre.classList.toggle('hide');
-      e.target.textContent = pre.classList.contains('hide') ? '👁 睇下內容' : '🙈 收埋';
+      e.target.textContent = pre.classList.contains('hide') ? '👁 檢視內容' : '🙈 收埋';
     };
   });
 
@@ -530,7 +642,7 @@ function render(results){
 async function copy(text, quiet){
   try{
     await navigator.clipboard.writeText(text);
-    showToast('已經複製，去 AI 度 paste 得喇 ✅');
+    showToast('已複製，可直接貼上到 AI ✅');
   }catch{
     const ta = document.createElement('textarea');
     ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
